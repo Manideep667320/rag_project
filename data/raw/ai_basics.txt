@@ -1,0 +1,9 @@
+Artificial Intelligence (AI) is the branch of computer science concerned with building systems capable of performing tasks that typically require human intelligence. These tasks include reasoning, problem-solving, learning, perception, and natural language understanding.
+
+AI can be categorized into two main types: Narrow AI and General AI. Narrow AI is designed to perform specific tasks such as speech recognition or image classification, while General AI would possess the ability to understand, learn, and apply knowledge across different domains like a human.
+
+The foundation of AI lies in algorithms, data, and computational power. With large datasets and improved hardware, modern AI systems have achieved remarkable success in various fields such as healthcare, finance, and autonomous systems.
+
+AI techniques often involve rule-based systems, expert systems, search algorithms, and optimization methods. However, modern AI heavily relies on Machine Learning (ML) and Deep Learning (DL) to automatically learn patterns from data instead of relying solely on predefined rules.
+
+The ultimate goal of AI is to create intelligent agents that can perceive their environment, reason about it, and take actions to achieve specific objectives effectively.

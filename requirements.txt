@@ -1,0 +1,12 @@
+faiss-cpu
+chromadb
+sentence-transformers
+python-dotenv
+langchain
+tqdm
+transformers
+flask
+rank_bm25
+pdfplumber
+python-docx
+watchdog

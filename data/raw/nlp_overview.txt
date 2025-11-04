@@ -1,0 +1,9 @@
+Natural Language Processing (NLP) is a field within Artificial Intelligence that focuses on enabling computers to understand, interpret, and generate human language. It combines linguistics, computer science, and machine learning.
+
+Core NLP tasks include tokenization, stemming, lemmatization, part-of-speech tagging, named entity recognition (NER), and sentiment analysis. These techniques help break down and analyze text in a structured manner.
+
+Machine learning models like Naive Bayes and Support Vector Machines were historically used for NLP tasks, but deep learning has revolutionized the field. Recurrent Neural Networks (RNNs), Long Short-Term Memory (LSTM) networks, and Transformers now power most state-of-the-art NLP systems.
+
+The Transformer architecture, introduced in the paper “Attention Is All You Need,” enabled large-scale pre-trained models such as BERT, GPT, and T5. These models use attention mechanisms to capture contextual meaning in text.
+
+Applications of NLP include chatbots, translation systems, text summarization, sentiment analysis, and voice assistants. With multilingual models and large language models (LLMs), NLP is advancing rapidly toward human-like understanding and generation.

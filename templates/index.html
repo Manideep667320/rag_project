@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RAG Project — Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>RAG Project</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="theme-icon">🌙</span>
+            </button>
+            <a href="http://localhost:8501" target="_blank" rel="noopener" class="submit-btn" style="margin-left:auto;">Open Streamlit UI</a>
+        </header>
+
+        <div id="new-knowledge-banner" style="display:none;" class="banner">
+            <span>New knowledge added!</span>
+            <button class="submit-btn" style="margin-left:1rem;" onclick="dismissNewKnowledge()">Dismiss</button>
+        </div>
+
+        <section class="upload-section" id="dropZone">
+            <h2>Document Upload</h2>
+            <p>Drag and drop files or click to select</p>
+            <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx" style="display: none">
+            <button class="submit-btn" onclick="document.getElementById('fileInput').click()">Select Files</button>
+            
+            {% if processing_status.current_stage %}
+            <div class="progress-section">
+                <p>Status: {{ processing_status.current_stage }}</p>
+                <div class="progress-bar">
+                    <div class="progress-inner" data-width-pct="{{ (processing_status.processed_files / processing_status.total_files * 100) if processing_status.total_files > 0 else 0 }}"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if uploaded_files %}
+            <ul class="files-list">
+                {% for file in uploaded_files %}
+                <li>
+                    <span>{{ file }}</span>
+                    <span class="file-size">{{ file_sizes.get(file, '') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
+
+        <section class="query-section">
+            <h2>Ask Questions</h2>
+            <div style="display:flex;gap:1rem;align-items:center;margin-bottom:0.5rem;">
+                <form method="post" class="query-form" style="flex:1;">
+                    <div class="form-controls">
+                        <div class="form-row">
+                            <label for="top_k">Context chunks:</label>
+                            <input id="top_k" name="top_k" type="number" min="1" max="50" value="{{ top_k or 3 }}">
+                        </div>
+                        <div class="form-row">
+                            <label for="re_rank">Re-ranker:</label>
+                            <select id="re_rank" name="re_rank">
+                                <option value="cosine" {% if re_rank == 'cosine' %}selected{% endif %}>Cosine (default)</option>
+                                <option value="bm25" {% if re_rank == 'bm25' %}selected{% endif %}>BM25</option>
+                                <option value="cross_encoder" {% if re_rank == 'cross_encoder' %}selected{% endif %}>Cross-Encoder</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="query-input-group">
+                        <textarea 
+                            id="query" 
+                            name="query" 
+                            class="query-input" 
+                            rows="3" 
+                            placeholder="Ask your question..."
+                        >{{ query }}</textarea>
+                        <button type="submit" class="submit-btn">Ask</button>
+                    </div>
+                </form>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <button class="submit-btn" onclick="clearChat(event)">Clear Chat</button>
+                    <small style="opacity:0.8">Memory: last 3 turns</small>
+                </div>
+            </div>
+        </section>
+
+        {% if chat_history %}
+        <section class="chat-history">
+            <h2>Chat History</h2>
+            <div class="card">
+                {% for m in chat_history %}
+                    {% if m is string %}
+                        <div class="chat-line">{{ m }}</div>
+                    {% else %}
+                        {% set role = m.role if m.role is defined else (m.get('type') if m.get is defined else 'msg') %}
+                        {% set content = m.content if m.content is defined else (m.get('content') if m.get is defined else m) %}
+                        <div class="chat-line"><strong>{{ role }}:</strong> {{ content }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if answer is not none %}
+        <section class="answer-section">
+            <h2>Answer</h2>
+            <div class="answer-meta">
+                <div class="confidence-indicator">
+                    <div class="confidence-bar" data-width-pct="{{ answer.confidence or 0 }}">
+                        <span class="confidence-label">{{ answer.confidence }}% confidence</span>
+                    </div>
+                </div>
+                <div class="answer-method">Method: {{ answer.method }}</div>
+                {% if answer.topic %}
+                <div class="answer-topic">Topic: {{ answer.topic }}</div>
+                {% endif %}
+            </div>
+            <div class="answer-text">{{ answer.text }}</div>
+        </section>
+        {% endif %}
+
+        {% if results %}
+        <section class="sources-section">
+            <h2>Sources</h2>
+            <ul class="sources-list">
+                {% for r in results %}
+                <li class="source-item">
+                    <div class="source-meta">
+                        <div class="chunk-score">
+                            <div class="score-bar" data-width-pct="{{ '%.1f'|format(r.score * 100) }}">
+                                <span class="score-label">{{ '%.1f'|format(r.score * 100) }}% relevance</span>
+                            </div>
+                        </div>
+                        {% if r.source %}
+                        <div class="source-file">Source: {{ r.source }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="source-text">
+                        {{ r['text'][:500] }}{% if r['text']|length > 500 %}...{% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+    </div>
+
+    <script>
+    // Theme toggle
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        document.cookie = `theme=${newTheme};path=/;max-age=31536000`;
+        updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+        const icon = document.getElementById('theme-icon');
+        const theme = document.documentElement.getAttribute('data-theme');
+        icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // File upload handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropZone.classList.add('drag-over');
+    }
+
+    function unhighlight(e) {
+        dropZone.classList.remove('drag-over');
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+    fileInput.addEventListener('change', handleFiles, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles({ target: { files: files } });
+    }
+
+    function handleFiles(e) {
+        const files = e.target.files;
+        uploadFiles(files);
+    }
+
+    function uploadFiles(files) {
+        const formData = new FormData();
+        Array.from(files).forEach(file => {
+            formData.append('files[]', file);
+        });
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) {
+                alert(result.error);
+            } else {
+                checkStatus();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Upload failed: ' + error.message);
+        });
+    }
+
+    function checkStatus() {
+        fetch('/status')
+            .then(response => response.json())
+            .then(status => {
+                if (status.error) {
+                    alert('Error: ' + status.error);
+                } else if (status.current_stage && status.current_stage !== 'done') {
+                    setTimeout(checkStatus, 1000);
+                } else if (status.current_stage === 'done') {
+                    location.reload();
+                }
+            });
+    }
+
+    // Initialize theme
+    updateThemeIcon();
+    // Apply dynamic widths for progress/confidence bars
+    function applyWidths() {
+        const nodes = document.querySelectorAll('[data-width-pct]');
+        nodes.forEach(el => {
+            const v = parseFloat(el.getAttribute('data-width-pct'));
+            const pct = isNaN(v) ? 0 : Math.max(0, Math.min(100, v));
+            el.style.width = pct + '%';
+        });
+    }
+    applyWidths();
+    
+    // Clear chat via API
+    function clearChat(e) {
+        e.preventDefault();
+        fetch('/clear_chat', { method: 'POST' })
+            .then(r => r.json())
+            .then(j => {
+                if (j.ok) location.reload(); else alert('Failed to clear chat: ' + (j.error||'unknown'));
+            })
+            .catch(err => alert('Failed to clear chat: ' + err.message));
+    }
+
+    // New knowledge banner polling
+    const banner = document.getElementById('new-knowledge-banner');
+    function pollUpdates() {
+        fetch('/status')
+            .then(r => r.json())
+            .then(s => {
+                if (s.new_knowledge) {
+                    banner.style.display = 'flex';
+                }
+            })
+            .catch(() => {});
+    }
+    function dismissNewKnowledge() {
+        fetch('/ack_update', { method: 'POST' })
+            .then(r => r.json())
+            .then(j => { if (j.ok) banner.style.display = 'none'; })
+            .catch(() => { banner.style.display = 'none'; });
+    }
+    setInterval(pollUpdates, 5000);
+    </script>
+</body>
+</html>

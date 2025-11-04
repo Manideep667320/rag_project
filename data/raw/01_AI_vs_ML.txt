@@ -1,0 +1,6 @@
+Title: AI vs ML: Understanding the Difference
+Format: Article/Text
+Content:
+Artificial Intelligence (AI) is a broad field aiming to create machines capable of human-like intelligence. 
+Machine Learning (ML) is a subset of AI that focuses on training algorithms to learn patterns from data. 
+Applications include natural language processing, image recognition, and predictive analytics.

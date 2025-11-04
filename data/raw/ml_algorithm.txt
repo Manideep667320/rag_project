@@ -1,0 +1,10 @@
+Machine Learning (ML) is a subset of Artificial Intelligence focused on enabling computers to learn from data without being explicitly programmed. The core idea is to build models that can identify patterns and make decisions based on experience.
+
+There are three main types of machine learning:
+1. Supervised Learning – Models learn from labeled datasets. Common algorithms include Linear Regression, Logistic Regression, Support Vector Machines (SVM), Decision Trees, and Random Forests.
+2. Unsupervised Learning – Models find hidden patterns in unlabeled data. Examples include K-Means Clustering, Hierarchical Clustering, and Principal Component Analysis (PCA).
+3. Reinforcement Learning – Agents learn through trial and error to maximize rewards. Algorithms like Q-Learning and Deep Q-Networks (DQN) are widely used in robotics and games.
+
+Evaluation metrics such as accuracy, precision, recall, and F1-score are used to assess model performance. Cross-validation ensures that models generalize well to unseen data.
+
+Recent advancements in ML, such as ensemble methods, transfer learning, and AutoML, have further improved model accuracy and adaptability across domains.
